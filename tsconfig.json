@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "removeComments": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "../*": ["src/*"] /*for disable src/ path recommend */
+    },
+    "typeRoots": ["./node_modules/@types"],
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictPropertyInitialization": false,
+    "skipLibCheck": true
+  },
+  "typedocOptions": {
+    "entryPoints": ["src/"],
+    "entryPointStrategy": "expand",
+    "out": "./docs",
+    "name": "Backend Documentation",
+    "includeVersion": true,
+    "readme": "none",
+    "exclude": ["./**/test/**", "./**/routes/**", "./**/types/**", "./**/models/**", "./**/validations/**"]
+  },
+  "exclude": ["node_modules", "dist", "coverage"],
+  "include": ["./src"]
+}
