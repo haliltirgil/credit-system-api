@@ -26,11 +26,11 @@ export class User extends BaseEntity {
   @Column({ nullable: false, name: 'last_name' })
   lastName: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   @Column({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp' })
   @Column({ name: 'updated_at' })
   updatedAt: Date;
 
