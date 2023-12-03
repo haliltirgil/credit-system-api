@@ -4,12 +4,7 @@ if (!process.env.DB_HOST || !process.env.DB_USERNAME || !process.env.DB_PASS || 
   throw new Error('Make sure DB_HOST, DB_USERNAME, DB_PASS and DB_NAME environment variables are defined.');
 }
 
-if (
-  !process.env.DEV_DB_HOST ||
-  !process.env.DEV_DB_USERNAME ||
-  !process.env.DEV_DB_PASS ||
-  !process.env.DEV_DB_NAME
-) {
+if (!process.env.DEV_DB_HOST || !process.env.DEV_DB_USERNAME || !process.env.DEV_DB_PASS || !process.env.DEV_DB_NAME) {
   throw new Error(
     'Make sure DEV_DB_HOST, DEV_DB_USERNAME, DEV_DB_PASS and DEV_DB_NAME environment variables are defined.'
   );

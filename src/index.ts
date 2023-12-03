@@ -3,7 +3,7 @@ import { app } from './app';
 import { DatabaseService } from './services/database-service';
 import { logger } from './services/logger-service';
 
-const PORT = process.env.PORT ?? 3000;
+const PORT = process.env.PORT ?? 4000;
 
 const start = async () => {
   await new DatabaseService().initialize();

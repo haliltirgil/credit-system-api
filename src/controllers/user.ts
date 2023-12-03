@@ -1,19 +1,30 @@
 import { Request, Response } from 'express';
+import { User } from '../models/user';
+import { NotFoundError } from '../errors/not-found-error';
 
 export class UserController {
   public static async createUser(req: Request, res: Response): Promise<void> {
-    /**
-     * basic bir create işlemi
-     */
-    res.status(201).send({ message: 'Welcome! from create user endpoint' });
+    const { firstName, lastName } = req.body;
+
+    const user = new User();
+    user.firstName = firstName;
+    user.lastName = lastName;
+    await user.save();
+
+    res.status(201).send({ message: 'User created successfully!' });
   }
 
   public static async getUserCredits(req: Request, res: Response): Promise<void> {
-    /**
-     * en kolayı user var mı yok mu kontrol ediyorsun
-     *
-     * varsa kredilerini listeleyip veriyorsun
-     */
-    res.status(200).send({ message: 'Welcome from get user credits endpoint' });
+    const { userId } = req.params;
+
+    const user = await User.findOneBy({
+      id: +userId,
+    });
+
+    if (!user) {
+      throw new NotFoundError('Error', 'User not found!');
+    }
+
+    res.status(200).send({ result: user.credits });
   }
 }
