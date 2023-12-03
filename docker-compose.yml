@@ -1,7 +1,6 @@
-# Compose instance
-version: '3.9'
+version: '3.8'
 services:
-  db:
+  postgredb:
     image: postgres:14-alpine
     restart: always
     environment:
@@ -9,18 +8,22 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: mydb
   app:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    image: htrgl/football-fixture-system
+    container_name: api
     ports:
-      - 3000:3000
-    links:
-      - db
+      - 4000:4000
     environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: postgres
-      DATABASE_NAME: mydb
+      PORT: 4000
+      NODE_ENV: 'production'
+      DB_HOST: 'localhost'
+      DB_PORT: 5432
+      DB_NAME: 'postgres'
+      DB_USERNAME: 'postgres'
+      DB_PASS: '12345'
+      DEV_DB_HOST: 'localhost'
+      DEV_DB_PORT: 5432
+      DEV_DB_NAME: 'postgres_test'
+      DEV_DB_USERNAME: 'postgres'
+      DEV_DB_PASS: 'securepassword'
     depends_on:
-      - db
+      - postgredb

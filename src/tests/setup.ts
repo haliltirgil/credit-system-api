@@ -8,7 +8,6 @@ const source: DataSource = new DataSource(testOrmConfig);
 beforeAll(async () => {
   try {
     await source.initialize();
-    console.log('im here');
   } catch (error) {
     logger.error(error);
   }
