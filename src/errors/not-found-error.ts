@@ -3,12 +3,12 @@ import { CustomError } from './custom-error';
 export class NotFoundError extends CustomError {
   statusCode = 404;
 
-  constructor() {
-    super('Not Found Error', 'The requested endpoint could not be found.', 'error');
+  constructor(public summary: string, public detail: string, public severity = 'error') {
+    super(summary, detail, severity);
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 
   serializeErrors() {
-    return [{ summary: 'Not Found Error', detail: 'The requested endpoint could not be found.', severity: 'error' }];
+    return [{ summary: this.summary, detail: this.detail, severity: this.severity }];
   }
 }
