@@ -1,0 +1,21 @@
+# Need to modify
+
+# name: Run Tests
+# on:
+#   push:
+#     branches:
+#       - master
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v2
+#       - name: Set Up Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 16
+#       - name: Install Dependencies
+#         run: npm install
+#       - name: Run Tests
+#         run: npm run test-coverage
