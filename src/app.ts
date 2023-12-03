@@ -19,7 +19,7 @@ app.use('/api/v1', router);
 
 app.all('*', async (req: Request, res: Response) => {
   logger.error(`The requested path is not found.`, { req, res });
-  throw new NotFoundError();
+  throw new NotFoundError('Error', 'The requested endpoint could not be found!');
 });
 
 app.use(errorLogger);
