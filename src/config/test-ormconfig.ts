@@ -5,8 +5,8 @@ const testOrmConfig: DataSourceOptions = {
   host: 'localhost',
   port: 5432,
   username: 'postgres',
-  password: 'securepassword',
-  database: 'TestDatabase',
+  password: 'postgres',
+  database: 'postgres',
   entities: ['src/models/*.ts'],
   synchronize: true,
 };
