@@ -18,7 +18,7 @@
     "testEnvironment": "node",
     "testTimeout": 30000,
     "setupFilesAfterEnv": [
-      "./src/test/setup.ts"
+      "./src/tests/setup.ts"
     ]
   },
   "keywords": [],

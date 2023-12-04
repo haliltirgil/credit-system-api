@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  BaseEntity,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, BaseEntity } from 'typeorm';
 import { Credit } from './credit';
 
 @Entity('Installments')
@@ -20,12 +12,10 @@ export class Installment extends BaseEntity {
   @Column()
   status: number;
 
-  @CreateDateColumn()
-  @Column({ name: 'created_at' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn()
-  @Column({ name: 'updated_at' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
   // eslint-disable-next-line arrow-body-style, prettier/prettier

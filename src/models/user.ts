@@ -1,12 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  BaseEntity,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany } from 'typeorm';
 import { MaxLength, MinLength } from 'class-validator';
 import { MAX_LENGTH, MIN_LENGTH } from '../constants/const-variables';
 import { Credit } from './credit';
@@ -26,12 +18,10 @@ export class User extends BaseEntity {
   @Column({ nullable: false, name: 'last_name' })
   lastName: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  @Column({ name: 'created_at' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
-  @Column({ name: 'updated_at' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
   // eslint-disable-next-line arrow-body-style
