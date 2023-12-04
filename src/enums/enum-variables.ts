@@ -1,9 +1,12 @@
 export enum CreditStatus {
   Approved = 0,
   Rejected,
+  Completed,
 }
 
 export enum InstallmentStatus {
-  Paid = 0,
-  Expired,
+  NotPaid = 0,
+  PartialPaid,
+  Paid,
+  OutOfDate,
 }
