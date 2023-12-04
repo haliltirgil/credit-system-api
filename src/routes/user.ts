@@ -7,4 +7,6 @@ router.post('/', UserController.createUser);
 
 router.get('/:userId/credits', UserController.getUserCredits);
 
+router.get('/', UserController.getUsers);
+
 export { router as userRouter };
