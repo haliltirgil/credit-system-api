@@ -1,15 +1,6 @@
 // eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable import/no-cycle */
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  BaseEntity,
-  ManyToOne,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, BaseEntity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './user';
 import { Installment } from './installment';
 
@@ -24,12 +15,10 @@ export class Credit extends BaseEntity {
   @Column()
   amount: number;
 
-  @CreateDateColumn()
-  @Column({ name: 'created_at' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn()
-  @Column({ name: 'updated_at' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
   // eslint-disable-next-line arrow-body-style

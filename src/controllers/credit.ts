@@ -1,7 +1,17 @@
 import { Request, Response } from 'express';
+import { User } from '../models/user';
 
 export class CreditController {
-  public static async takeCredit(_req: Request, res: Response): Promise<void> {
+  public static async takeCredit(req: Request, res: Response): Promise<void> {
+    const { userId, amount, installmentCount } = req.body;
+
+    const user = await User.findOneBy({
+      id: userId,
+    });
+
+    if (!user) {
+      throw new Error('');
+    }
     /**
      * bodyi al
      *

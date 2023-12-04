@@ -1,13 +1,16 @@
 import 'dotenv/config';
-import { DataSource } from 'typeorm';
+import { DataSource, getConnection } from 'typeorm';
 import { logger } from '../services/logger-service';
-import { testOrmConfig } from '../config/test-ormconfig';
+import { ormConfig } from '../config/ormconfig';
+import { setupDataSource } from './test-setup';
 
-const source: DataSource = new DataSource(testOrmConfig);
+const source: DataSource = new DataSource(ormConfig);
 
 beforeAll(async () => {
   try {
-    await source.initialize();
+    await setupDataSource();
+    // console.log('sa');
+    // await source.initialize();
   } catch (error) {
     logger.error(error);
   }

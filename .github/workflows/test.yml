@@ -1,21 +1,49 @@
-# Need to modify
-
-# name: Run Tests
-# on:
-#   push:
-#     branches:
-#       - master
-# jobs:
-#   test:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v2
-#       - name: Set Up Node.js
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: 16
-#       - name: Install Dependencies
-#         run: npm install
-#       - name: Run Tests
-#         run: npm run test-coverage
+name: Run unit tests with coverage
+on:
+  push:
+    branches:
+      - master
+      - test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: 'postgres'
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm run test-coverage
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-ce docker-ce-cli containerd.io
+      - name: Build Docker Image
+        run: docker build -t htrgl/credit-system-api:latest .
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push Docker Image to Docker Hub
+        run: docker push htrgl/credit-system-api:latest
