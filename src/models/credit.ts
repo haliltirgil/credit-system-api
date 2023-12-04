@@ -12,13 +12,26 @@ export class Credit extends BaseEntity {
   @Column()
   status: number;
 
-  @Column()
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'installment_count' })
+  installmentCount: number;
+
+  @Column({
+    type: 'timestamptz',
+    default: () => {
+      return 'CURRENT_TIMESTAMP';
+    },
+  })
   createdAt: Date;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamptz',
+    default: () => {
+      return 'CURRENT_TIMESTAMP';
+    },
+  })
   updatedAt: Date;
 
   // eslint-disable-next-line arrow-body-style
