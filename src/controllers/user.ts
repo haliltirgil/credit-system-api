@@ -11,7 +11,7 @@ export class UserController {
     user.lastName = lastName;
     await user.save();
 
-    res.status(201).send({ message: 'User created successfully!' });
+    res.status(201).send({ message: 'User created successfully!', result: user });
   }
 
   public static async getUserCredits(req: Request, res: Response): Promise<void> {
@@ -26,5 +26,11 @@ export class UserController {
     }
 
     res.status(200).send({ result: user.credits });
+  }
+
+  public static async getUsers(_req: Request, res: Response): Promise<void> {
+    const users = await User.find();
+
+    res.status(200).send(users);
   }
 }
