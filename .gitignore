@@ -2,7 +2,6 @@ coverage
 dist
 node_modules
 todos.md
-docs
 
 .env
 app.log
