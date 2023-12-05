@@ -152,8 +152,12 @@ export class CreditController {
         throw new NotFoundError('Error', 'Installment not found!');
       }
 
-      if (installment.credit.user.id !== Number(userId) || installment.status === InstallmentStatus.Paid) {
+      if (installment.credit.user.id !== Number(userId)) {
         throw new ForbiddenError('Authorization Error', 'You are not authorized to use this API.');
+      }
+
+      if (installment.status === InstallmentStatus.Paid) {
+        throw new BadRequestError('Error', 'You are alread paid this installment!');
       }
 
       const installmentCredit = installment.credit;
