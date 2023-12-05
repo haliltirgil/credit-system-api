@@ -1,12 +1,22 @@
 import express, { Router } from 'express';
 import { CreditController } from '../controllers/credit';
+import { CreditValidation } from '../validations/credit-validation';
+import { validateRequest } from '../middlewares/validate-request';
 
 const router: Router = express.Router();
 
-router.post('/', CreditController.takeCredit);
+router.post('/', [...CreditValidation.takeCredit, validateRequest], CreditController.takeCredit);
 
-router.get('/:userId/status', CreditController.getUserCreditByStatus);
+router.get(
+  '/:userId/status',
+  [...CreditValidation.getUserCreditByStatus, validateRequest],
+  CreditController.getUserCreditByStatus
+);
 
-router.post('/:userId/repay', CreditController.repayCreditInstallment);
+router.post(
+  '/:userId/repay',
+  [...CreditValidation.repayCreditInstallment, validateRequest],
+  CreditController.repayCreditInstallment
+);
 
 export { router as creditRouter };

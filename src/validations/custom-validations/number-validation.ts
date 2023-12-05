@@ -20,4 +20,14 @@ const bodyNumber = (name: string) => {
     .escape();
 };
 
-export { paramNumber, bodyNumber };
+const bodyFloat = (name: string) => {
+  return body(name)
+    .isFloat()
+    .withMessage(`Parameter "${name}" must be float.`)
+    .isLength({ min: 1, max: 32 })
+    .withMessage(`Parameter "${name}" should be between 1-32 characters.`)
+    .trim()
+    .escape();
+};
+
+export { paramNumber, bodyNumber, bodyFloat };
