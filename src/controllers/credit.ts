@@ -51,7 +51,6 @@ export class CreditController {
       installment.amount = installmentAmounts[i];
       installment.status = InstallmentStatus.NotPaid;
       installment.credit = credit;
-      installment.remainingTotalAmount = amount;
       installment.dueDate = installmentDates[i];
 
       // eslint-disable-next-line no-await-in-loop
@@ -126,21 +125,24 @@ export class CreditController {
       throw new NotFoundError('Error', 'Installment not found!');
     }
 
-    if (installment.credit.user.id !== Number(userId)) {
+    if (installment.credit.user.id !== Number(userId) || installment.status === InstallmentStatus.Paid) {
       throw new ForbiddenError();
     }
 
     const installmentCredit = installment.credit;
 
-    if (Number(amount) > Number(installment.amount + installment.totalInterest)) {
+    if (Number(amount) > Number(installment.amount) + Number(installment.totalInterest)) {
       throw new BadRequestError('Error', 'Payment cannot be greater than the debt!');
     }
 
-    if (Number(amount) < Number(installment.amount + installment.totalInterest)) {
+    const tmpTotalInterest = installment.totalInterest;
+    const tmpInstallmentAmount = installment.amount;
+
+    if (Number(amount) < Number(installment.amount) + Number(installment.totalInterest)) {
       installment.status = InstallmentStatus.PartialPaid;
-      installment.amount -= amount;
-      installment.remainingTotalAmount -= amount;
-      installment.totalInterest -= installment.amount - amount;
+      installment.amount = Number(installment.amount) + Number(tmpTotalInterest) - Number(amount);
+      installment.totalInterest =
+        Number(installment.totalInterest) + Number(tmpInstallmentAmount) - Number(amount) - Number(installment.amount);
 
       installmentCredit.amount -= amount;
       installmentCredit.status = CreditStatus.PaymentStage;
@@ -152,9 +154,8 @@ export class CreditController {
     }
 
     installment.status = InstallmentStatus.Paid;
-    installment.amount -= amount;
-    installment.remainingTotalAmount -= amount;
-    installment.totalInterest -= installment.amount - amount;
+    installment.amount = Number(installment.amount) + Number(tmpTotalInterest) - Number(amount);
+    installment.totalInterest = Number(installment.totalInterest) + Number(tmpInstallmentAmount) - Number(amount);
     await installment.save();
 
     installmentCredit.installmentCount--;

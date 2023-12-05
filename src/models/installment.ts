@@ -13,9 +13,6 @@ export class Installment extends BaseEntity {
   @Column()
   status: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'remaining_amount' })
-  remainingTotalAmount: number;
-
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, name: 'total_interest' })
   totalInterest: number;
 
