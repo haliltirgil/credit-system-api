@@ -9,8 +9,8 @@ router.post('/', [...CreditValidation.takeCredit, validateRequest], CreditContro
 
 router.get(
   '/:userId/status',
-  [...CreditValidation.getUserCreditByStatus, validateRequest],
-  CreditController.getUserCreditByStatus
+  [...CreditValidation.getUserCreditByFilters, validateRequest],
+  CreditController.getUserCreditByFilters
 );
 
 router.post(
