@@ -70,27 +70,30 @@ export class CreditController {
     res.status(200).send(result);
   }
 
-  public static async repayCreditInstallment(req: Request, res: Response): Promise<void> {
+  public static async repayCreditInstallment(req: Request, res: Response) {
     const { userId } = req.params;
     const { installmentId, amount } = req.body;
 
-    const user = await User.findOneBy({
-      id: Number(userId),
+    const credit = await Credit.findOne({
+      where: { user: { id: Number(userId) }, installments: { id: installmentId } },
+      relations: ['installments'],
     });
 
-    if (!user) {
-      throw new NotFoundError('Error', 'User not found!');
+    if (!credit) {
+      throw new NotFoundError('Error', 'Related user credit not found!');
     }
 
-    const installment = await Installment.findOneBy({ id: installmentId });
+    const installment = await Installment.findOne({ where: { id: installmentId }, relations: ['credit'] });
 
     if (!installment) {
       throw new NotFoundError('Error', 'Installment not found!');
     }
 
-    if (!user.credits.includes(installment.credit)) {
-      throw new ForbiddenError();
-    }
+    credit.installments.forEach((item) => {
+      if (item.id !== installment.id) {
+        throw new ForbiddenError();
+      }
+    });
 
     if (amount > installment.amount) {
       throw new BadRequestError('Error', 'Payment cannot be greater than the debt!');
@@ -99,15 +102,25 @@ export class CreditController {
     if (amount < installment.amount) {
       installment.status = InstallmentStatus.PartialPaid;
       installment.amount -= amount;
+      credit.amount -= amount;
+      credit.status = CreditStatus.PaymentStage;
 
+      await credit.save();
       await installment.save();
 
-      res.status(200).send({ message: 'Partial payment successful!', result: installment });
+      return res.status(200).send({ message: 'Partial payment successful!', result: installment });
     }
 
     installment.status = InstallmentStatus.Paid;
+    installment.amount -= amount;
     await installment.save();
 
-    res.status(200).send({ message: 'Payment successful!' });
+    credit.installmentCount--;
+    credit.amount -= amount;
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    credit.amount <= 0 ? (credit.status = CreditStatus.Completed) : CreditStatus.PaymentStage;
+    await credit.save();
+
+    return res.status(200).send({ message: 'Payment successful!', result: installment });
   }
 }
