@@ -1,8 +1,10 @@
-import { bodyNumber } from './custom-validations/number-validation';
+import { bodyId, paramId } from './custom-validations/id-validation';
+import { bodyFloat, bodyNumber } from './custom-validations/number-validation';
 
-/**
- * TODO: write validations
- */
 export class CreditValidation {
-  public static takeCredit = [bodyNumber('amount')];
+  public static takeCredit = [bodyId('userId'), bodyFloat('amount'), bodyNumber('installmentCount')];
+
+  public static getUserCreditByStatus = [paramId('userId')];
+
+  public static repayCreditInstallment = [paramId('userId'), bodyId('installmentId'), bodyFloat('amount')];
 }

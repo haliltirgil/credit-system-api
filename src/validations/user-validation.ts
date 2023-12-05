@@ -1,8 +1,8 @@
+import { paramId } from './custom-validations/id-validation';
 import { bodyText } from './custom-validations/text-validation';
 
-/**
- * TODO: write validations
- */
 export class UserValidation {
-  public static createUser = [bodyText('firstName')];
+  public static createUser = [bodyText('firstName'), bodyText('lastName')];
+
+  public static getUserCredits = [paramId('userId')];
 }

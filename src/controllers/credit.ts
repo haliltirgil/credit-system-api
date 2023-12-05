@@ -6,10 +6,24 @@ import { CreditStatus, InstallmentStatus } from '../enums/enum-variables';
 import { Installment } from '../models/installment';
 import { calculateMonthWeekdays } from '../utils/calculate-weekdays';
 import { calculateInstallments } from '../utils/calculate-installments';
-import { ForbiddenError } from '../errors/forbidden-error';
 import { BadRequestError } from '../errors/bad-request-error';
+import { ForbiddenError } from '../errors/forbidden-error';
 
+/**
+ * Controller class for managing credit-related operations.
+ *
+ * @remarks
+ * This class includes methods for taking credit, retrieving user credits by status, and repaying credit installments.
+ */
 export class CreditController {
+  /**
+   * Takes a credit for a user and creates corresponding installments.
+   *
+   * @param req - Express Request object.
+   * @param res - Express Response object.
+   *
+   * @throws {NotFoundError} if the user is not found.
+   */
   public static async takeCredit(req: Request, res: Response): Promise<void> {
     const { userId, amount, installmentCount } = req.body;
 
@@ -36,6 +50,7 @@ export class CreditController {
       installment.amount = installmentAmounts[i];
       installment.status = InstallmentStatus.NotPaid;
       installment.credit = credit;
+      installment.remainingTotalAmount = amount;
       installment.dueDate = installmentDates[i];
 
       // eslint-disable-next-line no-await-in-loop
@@ -53,6 +68,14 @@ export class CreditController {
     });
   }
 
+  /**
+   * Retrieves user credits by status.
+   *
+   * @param req - Express Request object.
+   * @param res - Express Response object.
+   *
+   * @throws {NotFoundError} if the user is not found.
+   */
   public static async getUserCreditByStatus(req: Request, res: Response): Promise<void> {
     const { userId } = req.params;
 
@@ -70,44 +93,66 @@ export class CreditController {
     res.status(200).send(result);
   }
 
-  public static async repayCreditInstallment(req: Request, res: Response): Promise<void> {
+  /**
+   * Repays a credit installment for a user.
+   *
+   * @param req - Express Request object.
+   * @param res - Express Response object.
+   *
+   * @throws {NotFoundError} if the user credit or installment is not found.
+   * @throws {ForbiddenError} if the installment does not belong to the specified credit.
+   * @throws {BadRequestError} if the payment amount is greater than the debt.
+   */
+  public static async repayCreditInstallment(req: Request, res: Response) {
     const { userId } = req.params;
     const { installmentId, amount } = req.body;
 
-    const user = await User.findOneBy({
-      id: Number(userId),
+    const installment = await Installment.findOne({
+      where: { id: Number(installmentId) },
+      relations: { credit: { user: true } },
     });
-
-    if (!user) {
-      throw new NotFoundError('Error', 'User not found!');
-    }
-
-    const installment = await Installment.findOneBy({ id: installmentId });
 
     if (!installment) {
       throw new NotFoundError('Error', 'Installment not found!');
     }
 
-    if (!user.credits.includes(installment.credit)) {
+    if (installment.credit.user.id !== Number(userId)) {
       throw new ForbiddenError();
     }
 
-    if (amount > installment.amount) {
+    const installmentCredit = installment.credit;
+
+    if (Number(amount) > Number(installment.amount + installment.totalInterest)) {
       throw new BadRequestError('Error', 'Payment cannot be greater than the debt!');
     }
 
-    if (amount < installment.amount) {
+    if (Number(amount) < Number(installment.amount + installment.totalInterest)) {
       installment.status = InstallmentStatus.PartialPaid;
       installment.amount -= amount;
+      installment.remainingTotalAmount -= amount;
+      installment.totalInterest -= installment.amount - amount;
 
+      installmentCredit.amount -= amount;
+      installmentCredit.status = CreditStatus.PaymentStage;
+
+      await installmentCredit.save();
       await installment.save();
 
-      res.status(200).send({ message: 'Partial payment successful!', result: installment });
+      return res.status(200).send({ message: 'Partial payment successful!', result: installment });
     }
 
     installment.status = InstallmentStatus.Paid;
+    installment.amount -= amount;
+    installment.remainingTotalAmount -= amount;
+    installment.totalInterest -= installment.amount - amount;
     await installment.save();
 
-    res.status(200).send({ message: 'Payment successful!' });
+    installmentCredit.installmentCount--;
+    installmentCredit.amount -= amount;
+    installmentCredit.status = installmentCredit.amount <= 0 ? CreditStatus.Completed : CreditStatus.PaymentStage;
+
+    await installmentCredit.save();
+
+    return res.status(200).send({ message: 'Payment successful!', result: installment });
   }
 }

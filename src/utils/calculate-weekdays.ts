@@ -1,10 +1,15 @@
 /**
- * TODO: write docs
- * @param currentDate
- * @param installmentCount
- * @returns
+ * Calculates installment dates based on the provided current date and installment count.
+ *
+ * @param currentDate - The current date to start calculating installment dates.
+ * @param installmentCount - The number of installments to calculate.
+ * @returns An array of Date objects representing the calculated installment dates.
+ *
+ * @remarks
+ * This function calculates installment dates starting from the next month and avoids weekends (Saturday and Sunday).
+ * It considers the provided current date as the starting point.
  */
-export function calculateMonthWeekdays(currentDate: Date, installmentCount: number) {
+export function calculateMonthWeekdays(currentDate: Date, installmentCount: number): Date[] {
   const firstInstallmentDate = new Date(currentDate);
   firstInstallmentDate.setMonth(firstInstallmentDate.getMonth() + 1);
   firstInstallmentDate.setDate(firstInstallmentDate.getDay());

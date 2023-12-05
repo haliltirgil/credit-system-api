@@ -13,6 +13,12 @@ export class Installment extends BaseEntity {
   @Column()
   status: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'remaining_amount' })
+  remainingTotalAmount: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, name: 'total_interest' })
+  totalInterest: number;
+
   @Column({ type: 'timestamptz' })
   dueDate: Date;
 
@@ -33,6 +39,6 @@ export class Installment extends BaseEntity {
   updatedAt: Date;
 
   // eslint-disable-next-line arrow-body-style, prettier/prettier
-  @ManyToOne(() => Credit, (credit) => credit.installments)
+  @ManyToOne(() => Credit, (credit) => credit.installments, { nullable: false })
   credit: Credit;
 }
