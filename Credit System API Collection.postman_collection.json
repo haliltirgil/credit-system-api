@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"userId\": 1,\r\n    \"amount\": 200,\r\n    \"installmentCount\": 6\r\n}",
+							"raw": "{\r\n    \"userId\": 1,\r\n    \"amount\": 6161,\r\n    \"installmentCount\": 2\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -40,27 +40,46 @@
 					"response": []
 				},
 				{
-					"name": "Get User Credits By Status",
+					"name": "Get User Credits By Filters",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:4000/api/v1/credits/:userId/status",
+							"raw": "localhost:3000/api/v1/credits/:userId/status/?status=2&startDate=2022-10-10&limit=10&page=1",
 							"host": [
 								"localhost"
 							],
-							"port": "4000",
+							"port": "3000",
 							"path": [
 								"api",
 								"v1",
 								"credits",
 								":userId",
-								"status"
+								"status",
+								""
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "2"
+								},
+								{
+									"key": "startDate",
+									"value": "2022-10-10"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
 							],
 							"variable": [
 								{
 									"key": "userId",
-									"value": ""
+									"value": "1"
 								}
 							]
 						}
@@ -74,7 +93,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"installmentId\": 29,\r\n    \"amount\": 10\r\n}",
+							"raw": "{\r\n    \"installmentId\": 4,\r\n    \"amount\": 80.50\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -116,7 +135,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"firstName\": \"test\",\r\n    \"lastName\": \"test22\"\r\n}",
+							"raw": "{\r\n    \"firstName\": \"user 1\",\r\n    \"lastName\": \"user 1\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
