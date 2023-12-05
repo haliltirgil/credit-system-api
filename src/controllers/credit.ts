@@ -6,8 +6,8 @@ import { CreditStatus, InstallmentStatus } from '../enums/enum-variables';
 import { Installment } from '../models/installment';
 import { calculateMonthWeekdays } from '../utils/calculate-weekdays';
 import { calculateInstallments } from '../utils/calculate-installments';
-import { ForbiddenError } from '../errors/forbidden-error';
 import { BadRequestError } from '../errors/bad-request-error';
+import { ForbiddenError } from '../errors/forbidden-error';
 
 /**
  * Controller class for managing credit-related operations.
@@ -50,6 +50,7 @@ export class CreditController {
       installment.amount = installmentAmounts[i];
       installment.status = InstallmentStatus.NotPaid;
       installment.credit = credit;
+      installment.remainingTotalAmount = amount;
       installment.dueDate = installmentDates[i];
 
       // eslint-disable-next-line no-await-in-loop
@@ -106,39 +107,35 @@ export class CreditController {
     const { userId } = req.params;
     const { installmentId, amount } = req.body;
 
-    const credit = await Credit.findOne({
-      where: { user: { id: Number(userId) }, installments: { id: installmentId } },
-      relations: ['installments'],
+    const installment = await Installment.findOne({
+      where: { id: Number(installmentId) },
+      relations: { credit: { user: true } },
     });
-
-    if (!credit) {
-      throw new NotFoundError('Error', 'Related user credit not found!');
-    }
-
-    const installment = await Installment.findOne({ where: { id: installmentId }, relations: ['credit'] });
 
     if (!installment) {
       throw new NotFoundError('Error', 'Installment not found!');
     }
 
-    // Check installment user relation
-    credit.installments.forEach((item) => {
-      if (item.id !== installment.id) {
-        throw new ForbiddenError();
-      }
-    });
+    if (installment.credit.user.id !== Number(userId)) {
+      throw new ForbiddenError();
+    }
 
-    if (amount > installment.amount) {
+    const installmentCredit = installment.credit;
+
+    if (Number(amount) > Number(installment.amount + installment.totalInterest)) {
       throw new BadRequestError('Error', 'Payment cannot be greater than the debt!');
     }
 
-    if (amount < installment.amount) {
+    if (Number(amount) < Number(installment.amount + installment.totalInterest)) {
       installment.status = InstallmentStatus.PartialPaid;
       installment.amount -= amount;
-      credit.amount -= amount;
-      credit.status = CreditStatus.PaymentStage;
+      installment.remainingTotalAmount -= amount;
+      installment.totalInterest -= installment.amount - amount;
 
-      await credit.save();
+      installmentCredit.amount -= amount;
+      installmentCredit.status = CreditStatus.PaymentStage;
+
+      await installmentCredit.save();
       await installment.save();
 
       return res.status(200).send({ message: 'Partial payment successful!', result: installment });
@@ -146,13 +143,15 @@ export class CreditController {
 
     installment.status = InstallmentStatus.Paid;
     installment.amount -= amount;
+    installment.remainingTotalAmount -= amount;
+    installment.totalInterest -= installment.amount - amount;
     await installment.save();
 
-    credit.installmentCount--;
-    credit.amount -= amount;
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    credit.amount <= 0 ? (credit.status = CreditStatus.Completed) : CreditStatus.PaymentStage;
-    await credit.save();
+    installmentCredit.installmentCount--;
+    installmentCredit.amount -= amount;
+    installmentCredit.status = installmentCredit.amount <= 0 ? CreditStatus.Completed : CreditStatus.PaymentStage;
+
+    await installmentCredit.save();
 
     return res.status(200).send({ message: 'Payment successful!', result: installment });
   }
