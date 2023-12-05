@@ -1,4 +1,4 @@
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
 
 const paramDate = (name: string) => {
   return param(name)
@@ -17,4 +17,9 @@ const bodyDate = (name: string) => {
     .toDate()
     .withMessage(`Parameter ${name} must be ISO/Date format.`);
 };
-export { paramDate, bodyDate };
+
+const queryDate = (name: string) => {
+  return query(name).isISO8601().toDate().withMessage(`Parameter ${name} must be ISO/Date format.`);
+};
+
+export { paramDate, bodyDate, queryDate };

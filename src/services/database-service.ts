@@ -17,4 +17,8 @@ export class DatabaseService {
   public async destroy() {
     await this.source.destroy();
   }
+
+  public async getSource() {
+    return this.source;
+  }
 }

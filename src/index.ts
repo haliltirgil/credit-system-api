@@ -3,11 +3,15 @@ import { app } from './app';
 import { DatabaseService } from './services/database-service';
 import { logger } from './services/logger-service';
 import { CronService } from './services/cron-service';
+import { DataSourceUtil } from './utils/get-data-source';
 
 const PORT = process.env.PORT ?? 4000;
 
 const start = async () => {
-  await new DatabaseService().initialize();
+  const dbService = new DatabaseService();
+  await dbService.initialize();
+
+  DataSourceUtil.setDataSource(dbService.source);
 
   CronService.dailyJob();
 
