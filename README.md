@@ -1,6 +1,6 @@
 # Backend System API
 
-- An application developed to ....
+- An application developed to realize basic banking credit system.
 
 # Features
 
@@ -12,6 +12,8 @@ Comes with the following features implemented/configured
 - `jest` and `supertest` using Unit testing
 - `prettier` and `eslint` using improving code readability
 - `express-validator` paramater validation operation
+- `cron` scheduling operation
+- `typedoc` code documentation
 
 # Prerequisites
 
@@ -25,7 +27,7 @@ To build and run this app locally, you will need a few things:
 - Clone the repository
 
 ```
-git clone --depth=1 https://github.com/haliltirgil/library-system-api <project_name>
+git clone --depth=1 https://github.com/haliltirgil/credit-system-api <project_name>
 ```
 
 - Install dependencies
@@ -34,6 +36,14 @@ git clone --depth=1 https://github.com/haliltirgil/library-system-api <project_n
 cd <project_name>
 npm install
 ```
+
+- Make sure you have docker
+
+```
+docker-compose up
+```
+
+or
 
 - Make sure PostgreSQL is running
 - Make sure you are created Databases
@@ -44,6 +54,8 @@ npm install
 ```
 npm start
 ```
+
+- Import API collection from project directory
 
 ## Building
 
@@ -70,6 +82,18 @@ npm run test
 ```
 
 Running the above command also generates a coverage report.
+
+## Documentation
+
+[Typedoc](https://typedoc.org/) is serving documentation UI for users.
+
+If you don't have ./docs file in project directory run this command for serving docUI:
+
+```
+npm run typedoc
+```
+
+If you want to show documentation you use live server or open the ".docs/index.html" static file.
 
 ## ESLint
 
