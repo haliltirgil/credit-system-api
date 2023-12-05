@@ -4,7 +4,7 @@
  * @param installmentCount
  * @returns
  */
-export function calculateMonthWeekdays(currentDate: Date, installmentCount: number) {
+export function calculateMonthWeekdays(currentDate: Date, installmentCount: number): Date[] {
   const firstInstallmentDate = new Date(currentDate);
   firstInstallmentDate.setMonth(firstInstallmentDate.getMonth() + 1);
   firstInstallmentDate.setDate(firstInstallmentDate.getDay());
