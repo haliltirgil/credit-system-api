@@ -35,7 +35,7 @@ export class Credit extends BaseEntity {
   updatedAt: Date;
 
   // eslint-disable-next-line arrow-body-style
-  @ManyToOne(() => User, (user) => user.credits)
+  @ManyToOne(() => User, (user) => user.credits, { nullable: false })
   user: User;
 
   // eslint-disable-next-line arrow-body-style
