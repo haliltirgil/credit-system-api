@@ -9,6 +9,8 @@ import { calculateMonthWeekdays } from '../utils/calculate-weekdays';
 import { calculateInstallments } from '../utils/calculate-installments';
 import { BadRequestError } from '../errors/bad-request-error';
 import { ForbiddenError } from '../errors/forbidden-error';
+import { catchError } from '../utils/catch-custom-error';
+import { DataSourceUtil } from '../utils/get-data-source';
 
 /**
  * Controller class for managing credit-related operations.
@@ -28,44 +30,63 @@ export class CreditController {
   public static async takeCredit(req: Request, res: Response): Promise<void> {
     const { userId, amount, installmentCount } = req.body;
 
-    const user = await User.findOneBy({
-      id: userId,
-    });
+    // Start transaction
+    const queryRunner = DataSourceUtil.getDataSource().createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!user) {
-      throw new NotFoundError('Error', 'User not found!');
+    try {
+      // Find user
+      const user = await queryRunner.manager.findOne(User, { where: { id: userId } });
+
+      if (!user) {
+        throw new NotFoundError('Error', 'User not found!');
+      }
+
+      // Create credit
+      const credit = new Credit();
+      credit.status = CreditStatus.Approved;
+      credit.amount = amount;
+      credit.installmentCount = installmentCount;
+      credit.user = user;
+
+      await queryRunner.manager.save(credit);
+
+      const installmentAmounts = calculateInstallments(amount, installmentCount);
+      const installmentDates = calculateMonthWeekdays(new Date(), installmentCount);
+
+      // Create installments
+      for (let i = 0; i < installmentCount; i++) {
+        const installment = new Installment();
+        installment.amount = installmentAmounts[i];
+        installment.status = InstallmentStatus.NotPaid;
+        installment.credit = credit;
+        installment.dueDate = installmentDates[i];
+        // eslint-disable-next-line no-await-in-loop
+        await queryRunner.manager.save(installment);
+      }
+
+      // Find created installments
+      const installments = await queryRunner.manager.find(Installment, { where: { credit: { id: credit.id } } });
+
+      // Commit transaction
+      await queryRunner.commitTransaction();
+
+      res.status(201).send({
+        message: 'Credit created successfully!',
+        result: {
+          creditId: credit.id,
+          installments,
+        },
+      });
+    } catch (err) {
+      // Rollback transaction on error
+      await queryRunner.rollbackTransaction();
+      const error = catchError(err);
+      res.status(error.statusCode).send(error.body);
+    } finally {
+      await queryRunner.release();
     }
-
-    const credit = new Credit();
-    credit.status = CreditStatus.Approved;
-    credit.amount = amount;
-    credit.installmentCount = installmentCount;
-    credit.user = userId;
-    await credit.save();
-
-    const installmentAmounts = calculateInstallments(amount, installmentCount);
-    const installmentDates = calculateMonthWeekdays(new Date(), installmentCount);
-
-    for (let i = 0; i < installmentCount; i++) {
-      const installment = new Installment();
-      installment.amount = installmentAmounts[i];
-      installment.status = InstallmentStatus.NotPaid;
-      installment.credit = credit;
-      installment.dueDate = installmentDates[i];
-
-      // eslint-disable-next-line no-await-in-loop
-      await installment.save();
-    }
-
-    const installments = await Installment.find({ where: { credit: { id: credit.id } } });
-
-    res.status(201).send({
-      message: 'Credit created successfully!',
-      result: {
-        creditId: credit.id,
-        installments,
-      },
-    });
   }
 
   /**
@@ -116,54 +137,74 @@ export class CreditController {
     const { userId } = req.params;
     const { installmentId, amount } = req.body;
 
-    const installment = await Installment.findOne({
-      where: { id: Number(installmentId) },
-      relations: { credit: { user: true } },
-    });
+    // Start transaction
+    const queryRunner = DataSourceUtil.getDataSource().createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!installment) {
-      throw new NotFoundError('Error', 'Installment not found!');
-    }
+    try {
+      const installment = await queryRunner.manager.findOne(Installment, {
+        where: { id: Number(installmentId) },
+        relations: { credit: { user: true } },
+      });
 
-    if (installment.credit.user.id !== Number(userId) || installment.status === InstallmentStatus.Paid) {
-      throw new ForbiddenError();
-    }
+      if (!installment) {
+        throw new NotFoundError('Error', 'Installment not found!');
+      }
 
-    const installmentCredit = installment.credit;
+      if (installment.credit.user.id !== Number(userId) || installment.status === InstallmentStatus.Paid) {
+        throw new ForbiddenError('Authorization Error', 'You are not authorized to use this API.');
+      }
 
-    if (Number(amount) > Number(installment.amount) + Number(installment.totalInterest)) {
-      throw new BadRequestError('Error', 'Payment cannot be greater than the debt!');
-    }
+      const installmentCredit = installment.credit;
 
-    const tmpTotalInterest = installment.totalInterest;
-    const tmpInstallmentAmount = installment.amount;
+      if (Number(amount) > Number(installment.amount) + Number(installment.totalInterest)) {
+        throw new BadRequestError('Error', 'Payment cannot be greater than the debt!');
+      }
 
-    if (Number(amount) < Number(installment.amount) + Number(installment.totalInterest)) {
-      installment.status = InstallmentStatus.PartialPaid;
+      const tmpTotalInterest = installment.totalInterest;
+      const tmpInstallmentAmount = installment.amount;
+
+      if (Number(amount) < Number(installment.amount) + Number(installment.totalInterest)) {
+        installment.status = InstallmentStatus.PartialPaid;
+        installment.amount = Number(installment.amount) + Number(tmpTotalInterest) - Number(amount);
+        installment.totalInterest =
+          Number(installment.totalInterest) +
+          Number(tmpInstallmentAmount) -
+          Number(amount) -
+          Number(installment.amount);
+
+        installmentCredit.amount -= amount;
+        installmentCredit.status = CreditStatus.PaymentStage;
+
+        await queryRunner.manager.save(installmentCredit);
+        await queryRunner.manager.save(installment);
+
+        return res.status(200).send({ message: 'Partial payment successful!', result: installment });
+      }
+
+      installment.status = InstallmentStatus.Paid;
       installment.amount = Number(installment.amount) + Number(tmpTotalInterest) - Number(amount);
-      installment.totalInterest =
-        Number(installment.totalInterest) + Number(tmpInstallmentAmount) - Number(amount) - Number(installment.amount);
+      installment.totalInterest = Number(installment.totalInterest) + Number(tmpInstallmentAmount) - Number(amount);
+      await queryRunner.manager.save(installment);
 
+      installmentCredit.installmentCount--;
       installmentCredit.amount -= amount;
-      installmentCredit.status = CreditStatus.PaymentStage;
+      installmentCredit.status = installmentCredit.amount <= 0 ? CreditStatus.Completed : CreditStatus.PaymentStage;
 
-      await installmentCredit.save();
-      await installment.save();
+      await queryRunner.manager.save(installmentCredit);
 
-      return res.status(200).send({ message: 'Partial payment successful!', result: installment });
+      // Commit transaction
+      await queryRunner.commitTransaction();
+
+      return res.status(200).send({ message: 'Payment successful!', result: installment });
+    } catch (err) {
+      // Rollback transaction on error
+      await queryRunner.rollbackTransaction();
+      const error = catchError(err);
+      return res.status(error.statusCode).send(error.body);
+    } finally {
+      await queryRunner.release();
     }
-
-    installment.status = InstallmentStatus.Paid;
-    installment.amount = Number(installment.amount) + Number(tmpTotalInterest) - Number(amount);
-    installment.totalInterest = Number(installment.totalInterest) + Number(tmpInstallmentAmount) - Number(amount);
-    await installment.save();
-
-    installmentCredit.installmentCount--;
-    installmentCredit.amount -= amount;
-    installmentCredit.status = installmentCredit.amount <= 0 ? CreditStatus.Completed : CreditStatus.PaymentStage;
-
-    await installmentCredit.save();
-
-    return res.status(200).send({ message: 'Payment successful!', result: installment });
   }
 }
