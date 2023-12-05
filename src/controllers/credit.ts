@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { MoreThanOrEqual } from 'typeorm';
 import { User } from '../models/user';
 import { NotFoundError } from '../errors/not-found-error';
 import { Credit } from '../models/credit';
@@ -76,8 +77,9 @@ export class CreditController {
    *
    * @throws {NotFoundError} if the user is not found.
    */
-  public static async getUserCreditByStatus(req: Request, res: Response): Promise<void> {
+  public static async getUserCreditByFilters(req: Request, res: Response): Promise<void> {
     const { userId } = req.params;
+    const { status, startDate, limit, page } = req.query;
 
     const user = await User.findOneBy({
       id: Number(userId),
@@ -87,8 +89,16 @@ export class CreditController {
       throw new NotFoundError('Error', 'User not found!');
     }
 
-    // TODO: edit this query
-    const result = await Credit.find({ where: { status: 0 } });
+    const result = await Credit.find({
+      where: {
+        user: { id: Number(userId) },
+        status: Number(status),
+        createdAt: MoreThanOrEqual(new Date(startDate as string)),
+      },
+      take: Number(limit),
+      skip: (Number(page) - 1) * Number(limit),
+      order: { createdAt: 'DESC' },
+    });
 
     res.status(200).send(result);
   }
