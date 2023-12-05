@@ -17,8 +17,9 @@ export class UserController {
   public static async getUserCredits(req: Request, res: Response): Promise<void> {
     const { userId } = req.params;
 
-    const user = await User.findOneBy({
-      id: +userId,
+    const user = await User.findOne({
+      where: { id: Number(userId) },
+      relations: { credits: true },
     });
 
     if (!user) {
