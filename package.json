@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node-dev src/index.ts",
     "build": "tsc",
-    "test": "jest --watchAll --no-cache --runInBand",
+    "test": "jest --watchAll=false --no-cache --runInBand  --forceExit --detectOpenHandles --coverage",
     "test-coverage": "jest --watchAll=false --no-cache --coverage",
     "test-single": "jest --detectOpenHandles",
     "typedoc": "npx typedoc",
