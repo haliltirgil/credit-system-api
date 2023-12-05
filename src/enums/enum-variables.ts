@@ -1,6 +1,5 @@
 export enum CreditStatus {
   Approved = 0,
-  Rejected,
   PaymentStage,
   Completed,
 }
